@@ -190,6 +190,14 @@ namespace RaspberryPi.Sensors
             private set;
         }
 
+        public Bmp180CalibrationData CalibrationData
+        {
+            get
+            {
+                return calibrationData;
+            }
+        }
+
         public Bmp180Sensor(II2CBus i2cBus, int i2cAddress = Bmp180Sensor.DefaultI2CAddress, Bmp180Mode mode = Bmp180Mode.UltraLowPower)
         {
             this.i2cAddress = i2cAddress;
