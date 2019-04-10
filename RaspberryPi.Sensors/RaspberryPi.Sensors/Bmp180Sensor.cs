@@ -115,7 +115,7 @@ namespace RaspberryPi.Sensors
         {
             int retValue = 0;
 
-            int X1 = (rawValue - (int)calibrationData.AC6)*(((int)calibrationData.AC5) >> 15);
+            int X1 = (rawValue - (int)calibrationData.AC6)* ((int)calibrationData.AC5) >> 15;
             int X2 = (((int)calibrationData.MC) << 11) / (X1 + (int)calibrationData.MD);
             retValue = X1 + X2;
 
