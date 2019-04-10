@@ -20,8 +20,8 @@ namespace RaspberryPi.Sensors
 
     public sealed class Bmp180Sensor : ITemperatureSensor, IBarometricPressureSensor
     {
-        private int i2cAddress;
-        private Bmp180Mode mode;
+        private readonly int i2cAddress;
+        private readonly Bmp180Mode mode;
         private II2CDevice i2cDevice = null;
         private II2CBus i2cBus = null;
         private Bmp180CalibrationData calibrationData = new Bmp180CalibrationData();
