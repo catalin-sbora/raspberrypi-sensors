@@ -75,6 +75,22 @@ namespace RaspberryPi.Sensors
             set;            
         }
 
+        public bool IsContinuosMode
+        {
+            get
+            {
+                return (((byte)Mode >> 4) == 0x01);
+            }
+        }
+
+        public bool IsHighResolution
+        {
+            get
+            {
+                return (Mode == Bh1750Mode.ContinuousHighResolution || Mode == Bh1750Mode.OneTimeHighResolution);
+            }
+        }
+
         public byte MeasurementTime
         {
             get
@@ -99,9 +115,9 @@ namespace RaspberryPi.Sensors
                 byte firstByte = (byte)(0b0100_0000 | (value >> 5));
                 byte secondByte = (byte)(0b01100000 | (value & 0b00011111));
 
-                i2cDevice.Write(firstByte);
-                i2cDevice.Write(secondByte);
-                i2cDevice.Write((byte)Mode);
+                i2cDevice.WriteAddressByte(sensorAddress, firstByte);
+                i2cDevice.WriteAddressByte(sensorAddress, secondByte);
+                i2cDevice.WriteAddressByte(sensorAddress,(byte)Mode);
                 Thread.Sleep(10);
                 measurementTime = value;
                 Thread.Sleep(GetMaxTimeForConfiguration());
@@ -122,14 +138,15 @@ namespace RaspberryPi.Sensors
             {
                 throw new SensorNotInitializedException("The sensor is not initialized.");
             }
-            i2cDevice.Write((byte)Mode);
-            Thread.Sleep(GetMaxTimeForDataRead());
+            int waitTime = GetMaxTimeForDataRead();
+            if (!IsContinuosMode)
+            {
+                i2cDevice.WriteAddressByte(sensorAddress, (byte)Mode);
+                Thread.Sleep(waitTime);
+            }
+            var bigEndianValue = i2cDevice.ReadAddressWord(sensorAddress);
+            retVal = (ushort)((bigEndianValue & 0x00FF) << 8 | ((bigEndianValue & 0xFF00) >> 8));
 
-            var byteValue = i2cDevice.Read();
-            retVal = byteValue;
-            retVal <<= 8;
-            byteValue = i2cDevice.Read();
-            retVal |= byteValue;
             return retVal;
         }
 
@@ -144,7 +161,8 @@ namespace RaspberryPi.Sensors
         {
             i2cDevice = i2cBus.AddDevice(sensorAddress);
             Mode = mode;
-            i2cDevice.Write((byte)Mode);
+            i2cDevice.WriteAddressByte(sensorAddress, (byte)1);
+            i2cDevice.WriteAddressByte(sensorAddress, (byte)Mode);
             Thread.Sleep(GetMaxTimeForConfiguration());
         }
         
@@ -152,6 +170,16 @@ namespace RaspberryPi.Sensors
         {
             double retVal = 0.0;
             retVal = ReadRawIluminance();
+            if (MeasurementTime != DefaultMeasurementTime)
+            {
+                retVal = retVal * DefaultMeasurementTime / (double)MeasurementTime;
+                if (IsHighResolution)
+                {
+                    retVal /= 2.0;
+                }
+            }            
+            retVal /= 1.2;
+
             return retVal;
         }
     }
