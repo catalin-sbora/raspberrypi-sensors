@@ -137,12 +137,15 @@ namespace RaspberryPi.Sensors
                 case Bmp180Mode.UltraLowPower:
                     retVal = Command.ReadPressureUltraLowPower;
                     break;
+
                 case Bmp180Mode.Standard:
                     retVal = Command.ReadPressureStandard;
                     break;
+
                 case Bmp180Mode.HighResolution:
                     retVal = Command.ReadPressureHighResolution;
                     break;
+
                 case Bmp180Mode.UltraHighResolution:
                     retVal = Command.ReadPressureUltraHighResolution;
                     break;
@@ -158,12 +161,15 @@ namespace RaspberryPi.Sensors
                 case Bmp180Mode.UltraLowPower:
                     retVal = 5;
                     break;
+
                 case Bmp180Mode.Standard:
                     retVal = 8;
                     break;
+
                 case Bmp180Mode.HighResolution:
                     retVal = 14;
                     break;
+
                 case Bmp180Mode.UltraHighResolution:
                     retVal = 26;
                     break;
@@ -184,6 +190,7 @@ namespace RaspberryPi.Sensors
 
             return retVal;
         }
+
         public byte ChipId
         {
             get;
