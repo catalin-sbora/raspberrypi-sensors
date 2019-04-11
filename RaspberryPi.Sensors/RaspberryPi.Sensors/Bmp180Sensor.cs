@@ -63,7 +63,7 @@ namespace RaspberryPi.Sensors
         {
             if (i2cDevice == null)
             {
-                throw new DeviceNotConnectedException("Cannot read from device register. Device is not yet connected, please call the connect method first.");
+                throw new SensorNotInitializedException("Cannot read from device register. Device is not yet connected, please call the connect method first.");
             }
 
             //sensor stores data with msb first (big-endian) and we need to convert to little endian
@@ -82,7 +82,7 @@ namespace RaspberryPi.Sensors
         {
             if (i2cDevice == null)
             {
-                throw new DeviceNotConnectedException("Cannot read from device register. Device is not yet connected, please call the connect method first.");
+                throw new SensorNotInitializedException("Cannot read from device register. Device is not yet connected, please call the connect method first.");
             }
             return i2cDevice.ReadAddressByte((int)registerToRead);
         }
@@ -91,7 +91,7 @@ namespace RaspberryPi.Sensors
         {
             if (i2cDevice == null)
             {
-                throw new DeviceNotConnectedException("Cannot write command. Device is not yet connected, please call the connect method first.");
+                throw new SensorNotInitializedException("Cannot write command. Device is not yet connected, please call the connect method first.");
             }
             i2cDevice.WriteAddressByte((int)Register.Control, (byte)command);
         }

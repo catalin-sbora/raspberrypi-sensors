@@ -22,12 +22,14 @@ namespace RaspberryPi.Sensors
     public class Bh1750FviSensor : ILightSensor
     {
         private byte measurementTime;
-        private readonly II2CDevice i2cDevice = null;
+        private readonly II2CBus i2cBus = null;
+        private II2CDevice i2cDevice = null;
+        private readonly byte sensorAddress = 0;
         private const byte DefaultMeasurementTime = 69;
 
         public const byte DefaultI2CAddress = 0x23;
 
-        private int GetMaxWaitTime()
+        private int GetMaxTimeForConfiguration()
         {
             int retValue = 120;
             switch (Mode)
@@ -46,6 +48,24 @@ namespace RaspberryPi.Sensors
             }
 
             return retValue;
+        }
+
+        private int GetMaxTimeForDataRead()
+        {
+            int retVal = 10;
+            switch (Mode)
+            {                
+                case Bh1750Mode.OneTimeLowResolution:
+                    retVal = 24 * MeasurementTime / DefaultMeasurementTime;
+                    break;
+                
+                case Bh1750Mode.OneTimeHighResolution:
+                case Bh1750Mode.OneTimeStandardResolution:
+                    retVal = 180 * MeasurementTime / DefaultMeasurementTime;
+                    break;
+            }
+
+            return retVal;            
         }
 
 
@@ -70,7 +90,7 @@ namespace RaspberryPi.Sensors
 
                 if (i2cDevice == null)
                 {
-                    throw new DeviceNotConnectedException("Seems that the device is not connected. In order to set the measurement time the device must be connected and initialized");
+                    throw new SensorNotInitializedException("Seems that the device is not connected. In order to set the measurement time the device must be connected and initialized");
                 }
 
                 //Set MT register. In order to set it we need to send two bytes. First byte is in the form 01000(v7)(v6)(v5) and the second byte
@@ -84,21 +104,54 @@ namespace RaspberryPi.Sensors
                 i2cDevice.Write((byte)Mode);
                 Thread.Sleep(10);
                 measurementTime = value;
-                Thread.Sleep(GetMaxWaitTime());
+                Thread.Sleep(GetMaxTimeForConfiguration());
 
             }
-        }               
+        }
 
-
-
-        public Bh1750FviSensor(II2CBus i2cBus, byte i2cAddress = DefaultI2CAddress, Bh1750Mode mode = Bh1750Mode.ContinuousStandardResolution)
+        private ushort ReadRawIluminance()
         {
+            ushort retVal = 0;
+            
+            //in order to read the value from the sensor, first we must write the mode to the sensor
+            if (Mode == Bh1750Mode.Unconfigured)
+            {
+                throw new SensorNotConfiguredException("Sensor mode is not configured.");
+            }
+            if (i2cDevice == null)
+            {
+                throw new SensorNotInitializedException("The sensor is not initialized.");
+            }
+            i2cDevice.Write((byte)Mode);
+            Thread.Sleep(GetMaxTimeForDataRead());
 
+            var byteValue = i2cDevice.Read();
+            retVal = byteValue;
+            retVal <<= 8;
+            byteValue = i2cDevice.Read();
+            retVal |= byteValue;
+            return retVal;
+        }
+
+
+        public Bh1750FviSensor(II2CBus i2cBus, byte i2cAddress = DefaultI2CAddress)
+        {
+            this.i2cBus = i2cBus;
+            this.sensorAddress = i2cAddress;
+        }
+
+        public void Connect(Bh1750Mode mode)
+        {
+            i2cDevice = i2cBus.AddDevice(sensorAddress);
+            Mode = mode;
+            i2cDevice.Write((byte)Mode);
+            Thread.Sleep(GetMaxTimeForConfiguration());
         }
         
         public double GetIluminance()
         {
             double retVal = 0.0;
+            retVal = ReadRawIluminance();
             return retVal;
         }
     }

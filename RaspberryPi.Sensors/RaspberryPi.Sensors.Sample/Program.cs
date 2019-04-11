@@ -36,6 +36,16 @@ namespace RaspberryPi.Sensors.Sample
                 Console.Write("Read Pressure ... ");
                 var pressure = bmpSensor.GetPressure();
                 Console.WriteLine($"Done. {pressure} Pa");
+
+                Bh1750FviSensor lightSensor = new Bh1750FviSensor(Pi.I2C, Bh1750FviSensor.DefaultI2CAddress);
+                Console.Write("Connecting to light sensor...");
+                lightSensor.Connect(Bh1750Mode.ContinuousStandardResolution);
+                Console.WriteLine(" Done. ");
+                Console.WriteLine(" Reading value... ");
+                var detectedLight = lightSensor.GetIluminance();
+                Console.WriteLine($"Done. {detectedLight}");
+
+
             }
             catch (Exception e)
             {
